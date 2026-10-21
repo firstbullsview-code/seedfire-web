@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071714">
+  <title>Seed_Fire | 감지기 찾기</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071714;--panel:#102522;--panel2:#15302b;--stroke:#294941;--text:#effbf4;--muted:#9ebdb3;--accent:#7aebbb;--red:#ff8d88;--yellow:#eaca88;--shadow:0 18px 50px rgba(0,0,0,.24)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse 90% 45% at 50% -10%,#174f3b 0%,transparent 80%),var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;color:var(--text);line-height:1.5}
+    .wrap{max-width:600px;margin:0 auto;padding:30px 18px 50px}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:32px}
+    .brand-name{font-size:13px;font-weight:900;letter-spacing:.17em;color:#b6d2c8}.brand-name strong{color:var(--accent)}
+    .tag{font-size:11px;border:1px solid var(--stroke);color:var(--muted);border-radius:99px;padding:5px 10px}
+    .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--accent);font-weight:800;margin:0 0 8px}
+    h1{font-size:clamp(27px,6vw,35px);letter-spacing:-.06em;margin:0 0 8px}p{margin:0;color:var(--muted)}
+    .lead{font-size:14px;line-height:1.8;margin-bottom:25px}
+    .panel{border:1px solid var(--stroke);background:linear-gradient(150deg,var(--panel),#0b1f1b);border-radius:22px;padding:21px;box-shadow:var(--shadow);margin:15px 0}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .small{font-size:12px;color:var(--muted)} .label{font-size:13px;color:var(--muted)}
+    h2{margin:0;font-size:19px;letter-spacing:-.03em}
+    .device-title{font-size:25px;font-weight:850;letter-spacing:-.04em}
+    .state{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;color:var(--muted);border:1px solid var(--stroke);background:#0a1a17;font-size:12px;font-weight:800}
+    .state .dot{width:8px;height:8px;border-radius:50%;background:#78948c}
+    .state.connected{color:var(--accent);background:#143629;border-color:#347e5c}.state.connected .dot{background:var(--accent);box-shadow:0 0 0 4px #7aebbb22}
+    .state.connecting{color:var(--yellow)}.state.connecting .dot{background:var(--yellow)}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+    .stat{background:#0a1e1a;border-radius:13px;padding:13px;border:1px solid #203a32}
+    .value{display:block;font-size:14px;font-weight:800;margin-top:3px;word-break:break-all}
+    button{appearance:none;cursor:pointer;width:100%;border-radius:13px;font-family:inherit;font-weight:850;font-size:15px;min-height:51px;padding:13px;border:1px solid transparent;transition:transform .15s,opacity .15s,background .15s}
+    button:active:not(:disabled){transform:scale(.985)}button:disabled{opacity:.37;cursor:not-allowed}
+    .primary{background:var(--accent);color:#072017}.secondary{background:#19392f;border-color:#35624e;color:var(--text)}
+    .ghost{background:transparent;border-color:#34564c;color:#d7f1e4}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+    .on{background:#dc564f;color:#fff}.off{background:#285c49;border-color:#4a9a75;color:#f5fff7}
+    .separator{height:1px;background:var(--stroke);margin:18px 0}
+    .helper{font-size:12px;line-height:1.7;color:var(--muted);margin-top:12px}
+    .num{display:inline-grid;place-items:center;border-radius:9px;background:#224737;color:var(--accent);width:26px;height:26px;font-size:12px;font-weight:800;flex-shrink:0}
+    .steps{display:grid;gap:12px;margin-top:17px}
+    .step{display:flex;align-items:start;gap:11px;font-size:13px;color:#d8eae2}
+    .logs{list-style:none;margin:11px 0 0;padding:0;max-height:165px;overflow:auto;display:grid;gap:9px}
+    .logs li{font-size:12px;border-top:1px solid #254139;padding-top:9px;color:#d4e8dc;overflow-wrap:anywhere}
+    .logs time{color:#81a99a;margin-right:8px;font-variant-numeric:tabular-nums}
+    code{font-size:12px;color:#a2f1cc;overflow-wrap:anywhere}
+    .foot{font-size:12px;color:#94b3a9;line-height:1.8;margin-top:16px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:400px){.wrap{padding:19px 13px 40px}.panel{padding:16px;border-radius:18px}.device-title{font-size:22px}button{font-size:13px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><span class="brand-name"><strong>SKY</strong>EDGE / SEED_FIRE</span><span class="tag">FIELD DEVICE FINDER</span></header>
+    <p class="eyebrow">감지기 회수용 웹 제어</p>
+    <h1>감지기 찾기</h1>
+    <p class="lead">주변의 Seed_Fire 감지기를 블루투스로 연결한 뒤, 부저를 울려 설치 위치를 확인하세요.</p>
+
+    <section class="panel" aria-labelledby="sensorHeading">
+      <div class="row">
+        <div><div class="label">선택한 감지기</div><div class="device-title" id="sensorHeading">SeedFire-01</div></div>
+        <div id="connectionBadge" class="state"><span class="dot"></span><span id="connectionText">연결 안 됨</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="label">통신 방식</span><span class="value">BLE · 근거리</span></div>
+        <div class="stat"><span class="label">마지막 명령</span><span class="value" id="lastCommand">없음</span></div>
+      </div>
+      <div style="margin-top:18px;display:grid;gap:10px">
+        <button class="primary" id="connectButton" type="button">⌁ 감지기 검색 및 연결</button>
+        <div class="controls" style="margin:0">
+          <button class="secondary" id="scanAllButton" type="button">전체 BLE 목록</button>
+          <button class="ghost" id="disconnectButton" type="button" disabled>연결 해제</button>
+        </div>
+      </div>
+      <p class="helper" id="connectionHint" role="status" aria-live="polite">감지기에 전원을 공급하고, 휴대폰 블루투스를 켠 후 연결하세요.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="buzzerHeading">
+      <div class="row"><h2 id="buzzerHeading">📢 위치 찾기 부저</h2><span class="tag">SENSOR 01</span></div>
+      <p class="helper" style="margin-top:8px">연결 후 아래 버튼으로 감지기의 능동형 부저를 제어할 수 있어요.</p>
+      <div class="controls">
+        <button class="on" id="onButton" type="button" disabled>● 부저 켜기</button>
+        <button class="off" id="offButton" type="button" disabled>■ 부저 끄기</button>
+      </div>
+      <p class="helper">전송하는 값: <code>ON</code> / <code>OFF</code> (UTF-8). 이 화면의 전송 완료는 감지기의 실제 소리 출력까지 검증한 것은 아닙니다.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="logHeading">
+      <div class="row"><h2 id="logHeading">통신 기록</h2><span class="small">이번 접속만 표시</span></div>
+      <ul id="logs" class="logs" aria-live="polite"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="guideHeading">
+      <h2 id="guideHeading">사용 방법</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><span>ESP32-C3에 이전 <strong>SeedFire-01 BLE 펌웨어</strong>를 업로드하고 전원을 켜세요.</span></div>
+        <div class="step"><span class="num">2</span><span><strong>감지기 검색 및 연결</strong>을 눌러 SeedFire-01을 선택하세요. 목록에 없으면 <strong>전체 BLE 목록</strong>을 사용하세요.</span></div>
+        <div class="step"><span class="num">3</span><span><strong>부저 켜기</strong>를 눌러 소리를 찾고, <strong>부저 끄기</strong>로 종료하세요.</span></div>
+      </div>
+      <div class="separator"></div>
+      <p class="helper">웹 블루투스는 <strong>HTTPS 또는 localhost</strong>에서 열어야 합니다. 권장 브라우저는 Android Chrome 또는 PC Chrome/Edge입니다. iPhone Safari는 기본 지원하지 않습니다.</p>
+    </section>
+
+    <p class="foot">시제품 테스트용입니다. 웹페이지에서 화재 상태·배터리·정확한 거리(RSSI)를 직접 읽는 기능은 현재 감지기 펌웨어에 구현되어 있지 않습니다. 감지기 부저를 켠 채 연결이 끊어지면, 다시 연결해 OFF 명령을 보내야 할 수 있습니다.</p>
+  </main>
+  <script>
+    'use strict';
+    const SERVICE_UUID = '8d3e5f00-55aa-4c01-8d10-1d0100000001';
+    const BUZZER_UUID = '8d3e5f01-55aa-4c01-8d10-1d0100000001';
+    const el = (id) => document.getElementById(id);
+    const buttons = {
+      connect: el('connectButton'), scan: el('scanAllButton'),
+      disconnect: el('disconnectButton'), on: el('onButton'), off: el('offButton')
+    };
+    let device = null;
+    let characteristic = null;
+    let busy = false;
+    let connecting = false;
+
+    function log(text) {
+      const li = document.createElement('li');
+      const time = document.createElement('time');
+      time.textContent = new Date().toLocaleTimeString('ko-KR', {hour12: false});
+      li.append(time, document.createTextNode(text));
+      el('logs').prepend(li);
+      while (el('logs').children.length > 20) el('logs').lastElementChild.remove();
+    }
+
+    function updateUI(message) {
+      const connected = Boolean(device && device.gatt && device.gatt.connected && characteristic);
+      el('connectionBadge').className = `state ${connected ? 'connected' : connecting ? 'connecting' : ''}`;
+      el('connectionText').textContent = connected ? '연결됨' : connecting ? '연결 중' : '연결 안 됨';
+      buttons.connect.disabled = connecting || busy || connected;
+      buttons.scan.disabled = connecting || busy || connected;
+      buttons.disconnect.disabled = connecting || busy || !connected;
+      buttons.on.disabled = !connected || busy;
+      buttons.off.disabled = !connected || busy;
+      if (message) el('connectionHint').textContent = message;
+    }
+
+    function onDisconnected() {
+      characteristic = null;
+      busy = false;
+      connecting = false;
+      updateUI('연결이 끊겼습니다. 부저가 켜져 있었다면 다시 연결해 OFF를 보내세요.');
+      log('감지기 연결 끊김');
+    }
+
+    async function connect(useAllDevices = false) {
+      if (!window.isSecureContext) {
+        updateUI('보안 연결이 아닙니다. HTTPS 또는 localhost에서 웹페이지를 열어 주세요.');
+        log('연결 불가: HTTPS / localhost 필요');
+        return;
+      }
+      if (!('bluetooth' in navigator)) {
+        updateUI('이 브라우저는 Web Bluetooth를 지원하지 않습니다. Android Chrome 또는 PC Chrome/Edge를 이용해 주세요.');
+        log('연결 불가: Web Bluetooth 미지원');
+        return;
+      }
+      connecting = true;
+      updateUI('블루투스 기기 선택 창에서 SeedFire-01을 선택하세요.');
+      try {
+        const options = useAllDevices
+          ? {acceptAllDevices: true, optionalServices: [SERVICE_UUID]}
+          : {filters: [{namePrefix: 'SeedFire-'}], optionalServices: [SERVICE_UUID]};
+        const next = await navigator.bluetooth.requestDevice(options);
+        // requestDevice()는 반드시 사용자가 버튼을 누른 이벤트에서 시작합니다.
+        if (device) device.removeEventListener('gattserverdisconnected', onDisconnected);
+        device = next;
+        device.addEventListener('gattserverdisconnected', onDisconnected);
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(BUZZER_UUID);
+        el('sensorHeading').textContent = device.name || '이름 없는 감지기';
+        log(`${device.name || '선택한 기기'} BLE 연결 성공`);
+        updateUI('연결 완료. 아래에서 부저 ON / OFF 명령을 보낼 수 있습니다.');
+      } catch (error) {
+        const msg = error && error.name === 'NotFoundError'
+          ? '기기를 선택하지 않았거나 검색되지 않았습니다. 전체 BLE 목록으로 다시 시도할 수 있어요.'
+          : `연결 실패: ${error.message || String(error)}`;
+        if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
+        characteristic = null;
+        log(msg);
+        updateUI(msg);
+      } finally {
+        connecting = false;
+        updateUI();
+      }
+    }
+
+    function disconnect() {
+      if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
+      else onDisconnected();
+    }
+
+    async function sendCommand(command) {
+      if (!device || !device.gatt || !device.gatt.connected || !characteristic) {
+        log('전송 실패: 감지기를 먼저 연결하세요.');
+        return;
+      }
+      if (busy) return;
+      busy = true;
+      updateUI('명령 전송 중...');
+      try {
+        await characteristic.writeValueWithResponse(new TextEncoder().encode(command));
+        el('lastCommand').textContent = command === 'ON' ? '부저 켜기 요청' : '부저 끄기 요청';
+        log(`${command} 명령 BLE 쓰기 완료`);
+        updateUI(`${command} 전송 완료. 실제 출력은 감지기 시리얼 모니터 / 부저로 확인하세요.`);
+      } catch (error) {
+        log(`명령 전송 실패: ${error.message || String(error)}`);
+        updateUI('명령 전송에 실패했습니다. BLE 연결 상태를 확인해 주세요.');
+      } finally {
+        busy = false;
+        updateUI();
+      }
+    }
+
+    buttons.connect.addEventListener('click', () => connect(false));
+    buttons.scan.addEventListener('click', () => connect(true));
+    buttons.disconnect.addEventListener('click', disconnect);
+    buttons.on.addEventListener('click', () => sendCommand('ON'));
+    buttons.off.addEventListener('click', () => sendCommand('OFF'));
+    log('Seed_Fire 감지기 웹 제어 화면 준비 완료');
+    updateUI();
+  </script>
+</body>
+</html>
