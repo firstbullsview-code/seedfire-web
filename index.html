@@ -1,226 +1,409 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071714">
-  <title>Seed_Fire | 감지기 찾기</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fa">
+  <meta name="description" content="SkyEdge Seed_Fire 감지기 BLE 탐색 및 회수용 웹 앱">
+  <title>SeedFire · 감지기 찾기</title>
   <style>
-    :root{color-scheme:dark;--bg:#071714;--panel:#102522;--panel2:#15302b;--stroke:#294941;--text:#effbf4;--muted:#9ebdb3;--accent:#7aebbb;--red:#ff8d88;--yellow:#eaca88;--shadow:0 18px 50px rgba(0,0,0,.24)}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;background:radial-gradient(ellipse 90% 45% at 50% -10%,#174f3b 0%,transparent 80%),var(--bg);font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;color:var(--text);line-height:1.5}
-    .wrap{max-width:600px;margin:0 auto;padding:30px 18px 50px}
-    .brand{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:32px}
-    .brand-name{font-size:13px;font-weight:900;letter-spacing:.17em;color:#b6d2c8}.brand-name strong{color:var(--accent)}
-    .tag{font-size:11px;border:1px solid var(--stroke);color:var(--muted);border-radius:99px;padding:5px 10px}
-    .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--accent);font-weight:800;margin:0 0 8px}
-    h1{font-size:clamp(27px,6vw,35px);letter-spacing:-.06em;margin:0 0 8px}p{margin:0;color:var(--muted)}
-    .lead{font-size:14px;line-height:1.8;margin-bottom:25px}
-    .panel{border:1px solid var(--stroke);background:linear-gradient(150deg,var(--panel),#0b1f1b);border-radius:22px;padding:21px;box-shadow:var(--shadow);margin:15px 0}
-    .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .small{font-size:12px;color:var(--muted)} .label{font-size:13px;color:var(--muted)}
-    h2{margin:0;font-size:19px;letter-spacing:-.03em}
-    .device-title{font-size:25px;font-weight:850;letter-spacing:-.04em}
-    .state{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;color:var(--muted);border:1px solid var(--stroke);background:#0a1a17;font-size:12px;font-weight:800}
-    .state .dot{width:8px;height:8px;border-radius:50%;background:#78948c}
-    .state.connected{color:var(--accent);background:#143629;border-color:#347e5c}.state.connected .dot{background:var(--accent);box-shadow:0 0 0 4px #7aebbb22}
-    .state.connecting{color:var(--yellow)}.state.connecting .dot{background:var(--yellow)}
-    .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
-    .stat{background:#0a1e1a;border-radius:13px;padding:13px;border:1px solid #203a32}
-    .value{display:block;font-size:14px;font-weight:800;margin-top:3px;word-break:break-all}
-    button{appearance:none;cursor:pointer;width:100%;border-radius:13px;font-family:inherit;font-weight:850;font-size:15px;min-height:51px;padding:13px;border:1px solid transparent;transition:transform .15s,opacity .15s,background .15s}
-    button:active:not(:disabled){transform:scale(.985)}button:disabled{opacity:.37;cursor:not-allowed}
-    .primary{background:var(--accent);color:#072017}.secondary{background:#19392f;border-color:#35624e;color:var(--text)}
-    .ghost{background:transparent;border-color:#34564c;color:#d7f1e4}
-    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
-    .on{background:#dc564f;color:#fff}.off{background:#285c49;border-color:#4a9a75;color:#f5fff7}
-    .separator{height:1px;background:var(--stroke);margin:18px 0}
-    .helper{font-size:12px;line-height:1.7;color:var(--muted);margin-top:12px}
-    .num{display:inline-grid;place-items:center;border-radius:9px;background:#224737;color:var(--accent);width:26px;height:26px;font-size:12px;font-weight:800;flex-shrink:0}
-    .steps{display:grid;gap:12px;margin-top:17px}
-    .step{display:flex;align-items:start;gap:11px;font-size:13px;color:#d8eae2}
-    .logs{list-style:none;margin:11px 0 0;padding:0;max-height:165px;overflow:auto;display:grid;gap:9px}
-    .logs li{font-size:12px;border-top:1px solid #254139;padding-top:9px;color:#d4e8dc;overflow-wrap:anywhere}
-    .logs time{color:#81a99a;margin-right:8px;font-variant-numeric:tabular-nums}
-    code{font-size:12px;color:#a2f1cc;overflow-wrap:anywhere}
-    .foot{font-size:12px;color:#94b3a9;line-height:1.8;margin-top:16px}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media(max-width:400px){.wrap{padding:19px 13px 40px}.panel{padding:16px;border-radius:18px}.device-title{font-size:22px}button{font-size:13px}}
+    :root { --bg:#f7f8fa; --ink:#191c22; --muted:#838b98; --stroke:#e6e9ee;
+      --blue:#3271ed; --blue-soft:#e9f0ff; --green:#21876b; --white:#fff;
+      --shade:0 14px 50px rgba(38,49,71,.045); }
+    * {box-sizing:border-box}
+    html {scroll-behavior:smooth}
+    body {margin:0;min-height:100vh;color:var(--ink);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    button {font:inherit;cursor:pointer;touch-action:manipulation}
+    button:disabled {cursor:not-allowed;opacity:.4}
+    button:focus-visible,summary:focus-visible {outline:3px solid #b7ceff;outline-offset:3px}
+    .wrap {width:min(100%,470px);min-height:100vh;margin:auto;padding:calc(24px + env(safe-area-inset-top)) 25px calc(30px + env(safe-area-inset-bottom))}
+    .top {display:flex;align-items:center;justify-content:space-between;margin-bottom:44px}
+    .brand {display:flex;align-items:center;gap:10px;font-weight:790;letter-spacing:-.045em;font-size:16px}
+    .mark {width:30px;height:30px;background:#1c2331;border-radius:10px;display:grid;place-items:center;color:white;position:relative;overflow:hidden}
+    .mark::after {content:"";position:absolute;bottom:-11px;right:-11px;width:26px;height:26px;border-radius:50%;background:#7ca8fb;opacity:.8}
+    .mark span {position:relative;z-index:1;letter-spacing:-.1em}
+    .top small {font-size:11px;letter-spacing:.12em;font-weight:700;color:#9ca4b0}
+    .intro {text-align:center}
+    .kicker {font-size:12px;color:#687d9d;font-weight:700;letter-spacing:.13em;margin:0 0 12px}
+    h1 {font-size:32px;letter-spacing:-.075em;line-height:1.14;margin:0;font-weight:790}
+    .subtitle {font-size:13px;color:#858d98;margin:13px 0 0;line-height:1.6}
+    .device-id {font-variant-numeric:tabular-nums}
+    .statusline {margin:22px auto 0;display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#666f7e;background:white;padding:8px 13px;border:1px solid #eef0f3;border-radius:999px}
+    .status-dot {width:7px;height:7px;border-radius:50%;background:#a4acb9;flex-shrink:0}
+    .statusline.active .status-dot {background:#3bac87;box-shadow:0 0 0 3px #ddf5eb}
+    .finder {height:355px;display:grid;place-items:center;position:relative;overflow:hidden;isolation:isolate}
+    .outer {position:absolute;width:305px;height:305px;border-radius:50%;border:1px solid #e4eaf6}
+    .ring {position:absolute;border:1px solid #e1e9f8;border-radius:50%;transition:transform 250ms ease}
+    .ring.one {width:254px;height:254px;background:#f3f7ff}
+    .ring.two {width:190px;height:190px;background:#eef4ff}
+    .ring.three {width:130px;height:130px;background:#e6efff}
+    .finder.is-scanning .ring.one {animation:breath 3.5s ease-in-out infinite}
+    .finder.is-scanning .ring.two {animation:breath 3.5s 0.35s ease-in-out infinite}
+    @keyframes breath {0%,100%{transform:scale(1)}50%{transform:scale(1.055)}}
+    .compass {position:absolute;top:24px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.16em;font-weight:800;color:#a6b1c2}
+    .piv {width:84px;height:84px;border-radius:50%;background:#fff;box-shadow:0 8px 25px #5183cb12;display:grid;place-items:center;position:relative;z-index:2}
+    .piv svg {width:37px;height:37px;stroke:#467add}
+    .direction {display:none;position:absolute;top:50%;left:50%;width:280px;height:280px;transform:translate(-50%,-50%) rotate(0deg);pointer-events:none;transition:transform .55s ease;z-index:3}
+    .direction.visible {display:block}
+    .direction .needle {position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:43px;height:43px;border-radius:50%;background:#3372ee;box-shadow:0 6px 16px #3271ed38;display:grid;place-items:center}
+    .direction svg {width:21px;height:21px;transform:rotate(-90deg);stroke:white}
+    .tracker-title {text-align:center;font-weight:700;font-size:20px;letter-spacing:-.055em;margin:-1px 0 0}
+    .tracker-sub {text-align:center;color:#88919e;font-size:12px;line-height:1.65;max-width:320px;margin:8px auto 0;min-height:38px}
+    .strength {display:flex;align-items:center;justify-content:center;gap:10px;margin:20px auto 0}
+    .bars {display:flex;align-items:flex-end;gap:4px;height:20px}
+    .bars i {width:6px;height:var(--h);background:#dbe1e9;border-radius:3px;display:block;transition:background .25s}
+    .bars i.on {background:#477ceb}
+    .rssi {font-size:13px;font-weight:700;min-width:62px;font-variant-numeric:tabular-nums}
+    .trend {font-size:12px;color:#7b8795}
+    .divider {height:1px;background:#e9ecf1;margin:30px 0 23px}
+    .info-row {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .info-row span {font-size:12px;color:#8a929e}
+    .info-row strong {font-size:13px;font-weight:720;letter-spacing:-.02em}
+    .buttons {display:grid;gap:10px;margin-top:16px}
+    .btn {border:0;border-radius:17px;width:100%;height:55px;font-size:15px;font-weight:740;letter-spacing:-.03em;display:flex;align-items:center;justify-content:center;gap:9px}
+    .btn svg {width:18px;height:18px}
+    .btn.blue {background:#3172ed;color:white;box-shadow:0 7px 18px #3172ed22}
+    .btn.dark {background:#202630;color:white}
+    .btn.light {background:#fff;color:#303946;border:1px solid #e9edf3}
+    .btn.outline {height:44px;border:1px solid #e1e6ef;background:transparent;color:#606c7c;font-size:12px;border-radius:13px}
+    .two {display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .caption {font-size:11px;line-height:1.6;color:#9299a4;margin:12px 3px 0}
+    .notice {margin:18px 0;padding:13px 15px;display:flex;align-items:flex-start;gap:10px;background:#edf2f9;border-radius:13px;font-size:12px;line-height:1.65;color:#52667f}
+    .notice svg {width:17px;height:17px;flex:none;margin-top:1px}
+    .micro {color:#949da8;font-size:11px;line-height:1.75}
+    .fold {margin-top:24px;border-top:1px solid #e7eaf0;padding-top:20px}
+    .fold summary {list-style:none;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:750;cursor:pointer}
+    .fold summary::-webkit-details-marker {display:none}
+    .fold summary::after {content:'+';color:#9ea7b5;font-size:20px;font-weight:400}
+    .fold[open] summary::after {content:'−'}
+    .detail-text {font-size:12px;color:#808b99;line-height:1.8;margin:12px 0}
+    .inline {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#697689;margin:10px 0}
+    .inline b {font-size:12px;color:#25313f}
+    .log {margin:12px 0 0;padding:12px;border:1px solid #e6eaf0;border-radius:12px;background:#fff;list-style:none;max-height:150px;overflow:auto}
+    .log li {font-size:11px;color:#6c7683;padding:5px 0;border-bottom:1px solid #f0f2f5;overflow-wrap:anywhere}
+    .log li:last-child {border:0}
+    .log time {font-variant-numeric:tabular-nums;margin-right:8px;color:#9aa2ad}
+    footer {text-align:center;margin-top:35px;color:#adb3bd;font-size:11px;letter-spacing:.08em}
+    #toast {position:fixed;bottom:calc(25px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(30px);background:#252a32;color:white;padding:12px 17px;border-radius:13px;font-size:12px;max-width:calc(100vw - 40px);width:max-content;box-shadow:0 10px 35px #1b233022;opacity:0;pointer-events:none;transition:.2s;z-index:10;text-align:center}
+    #toast.visible {transform:translateX(-50%) translateY(0);opacity:1}
+    @media(max-width:370px){.wrap{padding-left:17px;padding-right:17px}.finder{height:320px}.outer{width:274px;height:274px}.ring.one{width:232px;height:232px}.ring.two{width:170px;height:170px}.ring.three{width:120px;height:120px}.direction{width:256px;height:256px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="brand"><span class="brand-name"><strong>SKY</strong>EDGE / SEED_FIRE</span><span class="tag">FIELD DEVICE FINDER</span></header>
-    <p class="eyebrow">감지기 회수용 웹 제어</p>
-    <h1>감지기 찾기</h1>
-    <p class="lead">주변의 Seed_Fire 감지기를 블루투스로 연결한 뒤, 부저를 울려 설치 위치를 확인하세요.</p>
+    <header class="top">
+      <div class="brand"><div class="mark" aria-hidden="true"><span>S</span></div>SkyEdge</div>
+      <small>SEED_FIRE / FINDER</small>
+    </header>
 
-    <section class="panel" aria-labelledby="sensorHeading">
-      <div class="row">
-        <div><div class="label">선택한 감지기</div><div class="device-title" id="sensorHeading">SeedFire-01</div></div>
-        <div id="connectionBadge" class="state"><span class="dot"></span><span id="connectionText">연결 안 됨</span></div>
+    <section class="intro" aria-labelledby="mainTitle">
+      <p class="kicker">FIND MY SENSOR</p>
+      <h1 id="mainTitle">감지기 찾기</h1>
+      <p class="subtitle">보이지 않는 곳에 있어도, 가까이에서 찾을 수 있도록.</p>
+      <div class="statusline" id="deviceStatus"><span class="status-dot"></span><span id="deviceStatusText">감지기 미선택</span></div>
+    </section>
+
+    <section aria-label="감지기 탐색 화면">
+      <div class="finder" id="finder">
+        <span class="compass">FIELD 01</span>
+        <div class="outer"></div><div class="ring one"></div><div class="ring two"></div><div class="ring three"></div>
+        <div class="piv" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="6" width="12" height="24" rx="3"/><path d="M16 10h4M17 26h2"/></svg>
+        </div>
+        <div class="direction" id="directionArrow" aria-hidden="true"><div class="needle"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0m-6-6 6 6-6 6"/></svg></div></div>
       </div>
-      <div class="stats">
-        <div class="stat"><span class="label">통신 방식</span><span class="value">BLE · 근거리</span></div>
-        <div class="stat"><span class="label">마지막 명령</span><span class="value" id="lastCommand">없음</span></div>
+      <div class="tracker-title" id="trackerTitle">감지기를 선택하세요</div>
+      <p class="tracker-sub" id="trackerSub">감지기 1번을 선택하면 탐색과 부저 제어를 시작할 수 있어요.</p>
+      <div class="strength" aria-label="BLE 신호 강도">
+        <div class="bars" id="signalBars" aria-hidden="true">
+          <i style="--h:6px"></i><i style="--h:10px"></i><i style="--h:14px"></i><i style="--h:18px"></i><i style="--h:20px"></i>
+        </div>
+        <span class="rssi" id="rssiValue">-- dBm</span>
+        <span class="trend" id="trendText">측정 전</span>
       </div>
-      <div style="margin-top:18px;display:grid;gap:10px">
-        <button class="primary" id="connectButton" type="button">⌁ 감지기 검색 및 연결</button>
-        <div class="controls" style="margin:0">
-          <button class="secondary" id="scanAllButton" type="button">전체 BLE 목록</button>
-          <button class="ghost" id="disconnectButton" type="button" disabled>연결 해제</button>
+    </section>
+
+    <div class="divider"></div>
+    <section aria-label="감지기 조작">
+      <div class="info-row"><span>선택한 기기</span><strong class="device-id" id="selectedName">선택되지 않음</strong></div>
+      <div class="info-row"><span>상태</span><strong id="connectionState">대기 중</strong></div>
+      <div class="buttons">
+        <button class="btn dark" id="selectBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 7.5 12 12l-5 4.5M12 12l5-4.5M12 12l5 4.5M12 3v18"/></svg>
+          감지기 01 선택하기
+        </button>
+        <button class="btn light" id="measureBtn" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m8 16 8-8-3 6-5 2Z"/></svg>
+          신호 측정 시작
+        </button>
+        <div class="two">
+          <button class="btn blue" id="beepBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6 5 10H2v4h3l5 4V6ZM14 9a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12"/></svg>
+            소리 울리기
+          </button>
+          <button class="btn light" id="muteBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 6 5 10H2v4h3l5 4V6ZM15 9l6 6m0-6-6 6"/></svg>
+            소리 끄기
+          </button>
         </div>
       </div>
-      <p class="helper" id="connectionHint" role="status" aria-live="polite">감지기에 전원을 공급하고, 휴대폰 블루투스를 켠 후 연결하세요.</p>
-    </section>
-
-    <section class="panel" aria-labelledby="buzzerHeading">
-      <div class="row"><h2 id="buzzerHeading">📢 위치 찾기 부저</h2><span class="tag">SENSOR 01</span></div>
-      <p class="helper" style="margin-top:8px">연결 후 아래 버튼으로 감지기의 능동형 부저를 제어할 수 있어요.</p>
-      <div class="controls">
-        <button class="on" id="onButton" type="button" disabled>● 부저 켜기</button>
-        <button class="off" id="offButton" type="button" disabled>■ 부저 끄기</button>
+      <p class="caption">부저 명령은 선택한 감지기에 직접 전송돼요. 전송 중에는 신호 측정이 잠시 멈출 수 있어요.</p>
+      <div class="notice" id="guidance" role="status" aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8v.2"/></svg>
+        <span id="guidanceText">BLE 신호는 거리를 정확하게 알려주지 않아요. 화살표가 나타나더라도 신호가 강했던 휴대폰 방향을 참고하는 용도입니다.</span>
       </div>
-      <p class="helper">전송하는 값: <code>ON</code> / <code>OFF</code> (UTF-8). 이 화면의 전송 완료는 감지기의 실제 소리 출력까지 검증한 것은 아닙니다.</p>
     </section>
 
-    <section class="panel" aria-labelledby="logHeading">
-      <div class="row"><h2 id="logHeading">통신 기록</h2><span class="small">이번 접속만 표시</span></div>
-      <ul id="logs" class="logs" aria-live="polite"></ul>
-    </section>
-
-    <section class="panel" aria-labelledby="guideHeading">
-      <h2 id="guideHeading">사용 방법</h2>
-      <div class="steps">
-        <div class="step"><span class="num">1</span><span>ESP32-C3에 이전 <strong>SeedFire-01 BLE 펌웨어</strong>를 업로드하고 전원을 켜세요.</span></div>
-        <div class="step"><span class="num">2</span><span><strong>감지기 검색 및 연결</strong>을 눌러 SeedFire-01을 선택하세요. 목록에 없으면 <strong>전체 BLE 목록</strong>을 사용하세요.</span></div>
-        <div class="step"><span class="num">3</span><span><strong>부저 켜기</strong>를 눌러 소리를 찾고, <strong>부저 끄기</strong>로 종료하세요.</span></div>
-      </div>
-      <div class="separator"></div>
-      <p class="helper">웹 블루투스는 <strong>HTTPS 또는 localhost</strong>에서 열어야 합니다. 권장 브라우저는 Android Chrome 또는 PC Chrome/Edge입니다. iPhone Safari는 기본 지원하지 않습니다.</p>
-    </section>
-
-    <p class="foot">시제품 테스트용입니다. 웹페이지에서 화재 상태·배터리·정확한 거리(RSSI)를 직접 읽는 기능은 현재 감지기 펌웨어에 구현되어 있지 않습니다. 감지기 부저를 켠 채 연결이 끊어지면, 다시 연결해 OFF 명령을 보내야 할 수 있습니다.</p>
+    <details class="fold" id="details">
+      <summary>기기 정보 · 탐색 도움말</summary>
+      <p class="detail-text">① 감지기를 선택하고 ② 신호 측정을 눌러 보세요. 신호 측정이 지원되면 걸어 다니면서 값이 강해지는 쪽을 찾을 수 있습니다. 화살표는 충분한 RSSI·방향 데이터가 쌓인 경우에만 나타납니다. <strong>실제 감지기 위치나 정밀 방위각은 아닙니다.</strong></p>
+      <div class="inline"><span>BLE 서비스</span><b>SeedFire-01</b></div>
+      <div class="inline"><span>방향 센서</span><b id="headingState">확인 중</b></div>
+      <div class="inline"><span>신호 측정</span><b id="scanState">미시작</b></div>
+      <div class="inline"><span>최근 수신</span><b id="lastSeen">기록 없음</b></div>
+      <button class="btn outline" id="listAllBtn" type="button">감지기가 안 보이나요? 전체 BLE 기기 보기</button>
+      <ul class="log" id="eventLog" aria-live="polite"></ul>
+    </details>
+    <footer>SKYEDGE · SEED_FIRE / FIELD FINDER 01</footer>
   </main>
+  <div id="toast" role="status" aria-live="polite"></div>
   <script>
     'use strict';
+    // 기존 ESP32-C3 펌웨어의 GATT UUID를 그대로 사용합니다.
     const SERVICE_UUID = '8d3e5f00-55aa-4c01-8d10-1d0100000001';
-    const BUZZER_UUID = '8d3e5f01-55aa-4c01-8d10-1d0100000001';
-    const el = (id) => document.getElementById(id);
-    const buttons = {
-      connect: el('connectButton'), scan: el('scanAllButton'),
-      disconnect: el('disconnectButton'), on: el('onButton'), off: el('offButton')
-    };
+    const BUZZER_UUID  = '8d3e5f01-55aa-4c01-8d10-1d0100000001';
+    const $ = id => document.getElementById(id);
     let device = null;
-    let characteristic = null;
     let busy = false;
-    let connecting = false;
+    let scanMode = false;
+    let scanObject = null;
+    let scanAbort = null;
+    let lastRSSI = null;
+    let smoothRSSI = null;
+    let prevRSSI = null;
+    let lastSignalTime = 0;
+    let compassHeading = null;
+    let bestSector = null;
+    const observations = [];
+    let toastTimer = null;
 
-    function log(text) {
+    function toast(message) {
+      const box = $('toast');
+      box.textContent = message;
+      box.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => box.classList.remove('visible'), 3200);
+    }
+    function log(message) {
       const li = document.createElement('li');
       const time = document.createElement('time');
       time.textContent = new Date().toLocaleTimeString('ko-KR', {hour12: false});
-      li.append(time, document.createTextNode(text));
-      el('logs').prepend(li);
-      while (el('logs').children.length > 20) el('logs').lastElementChild.remove();
+      li.append(time, document.createTextNode(message));
+      $('eventLog').prepend(li);
+      while ($('eventLog').children.length > 15) $('eventLog').lastChild.remove();
     }
-
-    function updateUI(message) {
-      const connected = Boolean(device && device.gatt && device.gatt.connected && characteristic);
-      el('connectionBadge').className = `state ${connected ? 'connected' : connecting ? 'connecting' : ''}`;
-      el('connectionText').textContent = connected ? '연결됨' : connecting ? '연결 중' : '연결 안 됨';
-      buttons.connect.disabled = connecting || busy || connected;
-      buttons.scan.disabled = connecting || busy || connected;
-      buttons.disconnect.disabled = connecting || busy || !connected;
-      buttons.on.disabled = !connected || busy;
-      buttons.off.disabled = !connected || busy;
-      if (message) el('connectionHint').textContent = message;
+    function normalizeAngle(angle) { return (angle % 360 + 360) % 360; }
+    function setStatus(message, active=false) {
+      $('deviceStatusText').textContent = message;
+      $('deviceStatus').classList.toggle('active', active);
     }
-
-    function onDisconnected() {
-      characteristic = null;
-      busy = false;
-      connecting = false;
-      updateUI('연결이 끊겼습니다. 부저가 켜져 있었다면 다시 연결해 OFF를 보내세요.');
-      log('감지기 연결 끊김');
-    }
-
-    async function connect(useAllDevices = false) {
-      if (!window.isSecureContext) {
-        updateUI('보안 연결이 아닙니다. HTTPS 또는 localhost에서 웹페이지를 열어 주세요.');
-        log('연결 불가: HTTPS / localhost 필요');
+    function redraw() {
+      $('selectedName').textContent = device?.name || '선택되지 않음';
+      $('selectBtn').disabled = busy;
+      $('measureBtn').disabled = !device || busy;
+      $('beepBtn').disabled = !device || busy;
+      $('muteBtn').disabled = !device || busy;
+      $('listAllBtn').disabled = busy;
+      $('selectBtn').lastChild.textContent = device ? ' 다른 감지기 선택' : ' 감지기 01 선택하기';
+      if (!device) {
+        setStatus('감지기 미선택');
+        $('connectionState').textContent = '대기 중';
+        $('trackerTitle').textContent = '감지기를 선택하세요';
+        $('trackerSub').textContent = '감지기 1번을 선택하면 탐색과 부저 제어를 시작할 수 있어요.';
         return;
       }
-      if (!('bluetooth' in navigator)) {
-        updateUI('이 브라우저는 Web Bluetooth를 지원하지 않습니다. Android Chrome 또는 PC Chrome/Edge를 이용해 주세요.');
-        log('연결 불가: Web Bluetooth 미지원');
+      setStatus('감지기 선택됨', true);
+      $('connectionState').textContent = busy ? '명령 처리 중' : 'BLE 제어 준비';
+      if (!lastSignalTime || Date.now() - lastSignalTime > 12000) {
+        $('finder').classList.remove('is-scanning');
+        $('directionArrow').classList.remove('visible');
+        $('rssiValue').textContent = '-- dBm';
+        $('trendText').textContent = scanMode ? '신호 대기' : '측정 전';
+        [...$('signalBars').children].forEach(el => el.classList.remove('on'));
+        $('trackerTitle').textContent = scanMode ? '신호를 기다리는 중' : '준비됐어요';
+        $('trackerSub').textContent = scanMode ? '감지기가 광고 신호를 보내는지 확인하세요.' : '소리를 울리거나 신호 측정을 시작하세요.';
+      } else {
+        $('finder').classList.add('is-scanning');
+        const r = smoothRSSI;
+        const level = r >= -55 ? 5 : r >= -65 ? 4 : r >= -75 ? 3 : r >= -85 ? 2 : 1;
+        $('rssiValue').textContent = Math.round(r) + ' dBm';
+        [...$('signalBars').children].forEach((el, idx) => el.classList.toggle('on', idx < level));
+        $('trackerTitle').textContent = level >= 4 ? '신호가 강해요' : level >= 3 ? '신호가 잡혀요' : '조금 더 이동해 보세요';
+        $('trackerSub').textContent = '몇 걸음 이동한 뒤 신호가 강해지는지 비교해 보세요.';
+        const delta = prevRSSI === null ? 0 : r - prevRSSI;
+        $('trendText').textContent = delta > 3 ? '강해지는 중' : delta < -3 ? '약해지는 중' : '변화 적음';
+        if (Number.isFinite(compassHeading) && Number.isFinite(bestSector)) {
+          const diff = normalizeAngle(bestSector - compassHeading);
+          $('directionArrow').style.transform = `translate(-50%, -50%) rotate(${diff}deg)`;
+          $('directionArrow').classList.add('visible');
+          $('guidanceText').textContent = '화살표는 신호가 강했던 휴대폰 방향의 참고 기록입니다. 감지기가 실제로 놓인 방향을 뜻하지 않습니다.';
+        } else {
+          $('directionArrow').classList.remove('visible');
+        }
+      }
+    }
+    function onAdvertisement(event) {
+      if (!device || event.device.id !== device.id || !Number.isFinite(event.rssi)) return;
+      lastRSSI = event.rssi;
+      if (smoothRSSI === null) smoothRSSI = lastRSSI;
+      else smoothRSSI = smoothRSSI * .72 + lastRSSI * .28;
+      lastSignalTime = Date.now();
+      $('lastSeen').textContent = new Date().toLocaleTimeString('ko-KR');
+      // '어느 방향에 감지기가 있다'가 아니라, '어느 휴대폰 방향에서 더 강했는지'만 기록.
+      if (Number.isFinite(compassHeading)) {
+        observations.push({t:lastSignalTime, heading:compassHeading, rssi:smoothRSSI});
+        while (observations.length && lastSignalTime - observations[0].t > 90000) observations.shift();
+        const buckets = new Map();
+        for (const row of observations) {
+          const sector = Math.round(row.heading / 30) % 12;
+          const old = buckets.get(sector) || {sum:0,n:0};
+          old.sum += row.rssi; old.n++;
+          buckets.set(sector, old);
+        }
+        const candidates = [...buckets.entries()]
+          .filter(([,b]) => b.n >= 3)
+          .map(([s,b]) => ({angle:s*30,mean:b.sum/b.n})).sort((a,b)=>b.mean-a.mean);
+        // 샘플 2개 이상의 방향에서 6dB 이상 차이날 때만 안내. 여전히 비정밀 참고용.
+        bestSector = candidates.length >= 2 && candidates[0].mean - candidates[1].mean >= 6 ? candidates[0].angle : null;
+      }
+      redraw();
+    }
+    function updateCompass(event) {
+      if (!event.absolute || !Number.isFinite(event.alpha)) return;
+      // DeviceOrientation alpha는 기기/자세에 따라 값이 달라 정밀 나침반이 아닙니다.
+      compassHeading = normalizeAngle(360 - event.alpha);
+      $('headingState').textContent = '방향 자료 수신 중';
+      if (bestSector !== null) redraw();
+    }
+    async function enableCompass() {
+      if (!('DeviceOrientationEvent' in window)) {
+        $('headingState').textContent = '지원되지 않음';
         return;
       }
-      connecting = true;
-      updateUI('블루투스 기기 선택 창에서 SeedFire-01을 선택하세요.');
+      // Android Chrome은 보통 권한 팝업이 없으나 지원 환경에서는 요청.
       try {
-        const options = useAllDevices
-          ? {acceptAllDevices: true, optionalServices: [SERVICE_UUID]}
-          : {filters: [{namePrefix: 'SeedFire-'}], optionalServices: [SERVICE_UUID]};
-        const next = await navigator.bluetooth.requestDevice(options);
-        // requestDevice()는 반드시 사용자가 버튼을 누른 이벤트에서 시작합니다.
-        if (device) device.removeEventListener('gattserverdisconnected', onDisconnected);
-        device = next;
-        device.addEventListener('gattserverdisconnected', onDisconnected);
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const p = await DeviceOrientationEvent.requestPermission(true);
+          if (p !== 'granted') throw new Error('방향 센서 권한 거부');
+        }
+        window.removeEventListener('deviceorientationabsolute', updateCompass);
+        window.addEventListener('deviceorientationabsolute', updateCompass);
+        $('headingState').textContent = '센서 대기';
+      } catch (e) { $('headingState').textContent = '권한 없음'; log(e.message); }
+    }
+    async function chooseDevice(all=false) {
+      if (!isSecureContext || !navigator.bluetooth) {
+        toast('Android Chrome의 HTTPS 웹사이트에서 열어 주세요.');
+        return;
+      }
+      busy = true; redraw();
+      try {
+        const chosen = await navigator.bluetooth.requestDevice(all
+          ? {acceptAllDevices:true, optionalServices:[SERVICE_UUID]}
+          : {filters:[{namePrefix:'SeedFire-'}], optionalServices:[SERVICE_UUID]});
+        if (device) device.removeEventListener('advertisementreceived', onAdvertisement);
+        if (scanObject) { scanObject.stop(); scanObject = null; }
+        if (scanAbort) { scanAbort.abort(); scanAbort = null; }
+        device = chosen;
+        lastRSSI = smoothRSSI = prevRSSI = null;
+        lastSignalTime = 0; bestSector = null; observations.length = 0; scanMode = false;
+        device.addEventListener('advertisementreceived', onAdvertisement);
+        $('scanState').textContent = '미시작';
+        $('measureBtn').textContent = '신호 측정 시작';
+        $('guidanceText').textContent = '먼저 신호 측정을 눌러 보고, 지원되지 않으면 소리 울리기로 감지기를 찾아보세요.';
+        log('선택됨: ' + (device.name || '이름 없는 BLE 기기'));
+        toast('감지기 선택 완료');
+      } catch(e) {
+        if (e.name !== 'NotFoundError') { toast('기기를 선택하지 못했어요.'); log('선택 오류: '+e.message); }
+      } finally { busy = false; redraw(); }
+    }
+    async function measureSignal() {
+      if (!device || busy) return;
+      if (scanMode) {
+        if (scanObject) { scanObject.stop(); scanObject = null; }
+        if (scanAbort) { scanAbort.abort(); scanAbort = null; }
+        scanMode = false;
+        $('scanState').textContent = '중단됨';
+        $('measureBtn').textContent = '신호 측정 다시 시작';
+        redraw(); return;
+      }
+      // GATT 접속하면 ESP32-C3의 광고가 잠시 중단될 수 있습니다.
+      if (device.gatt?.connected) device.gatt.disconnect();
+      scanMode = true;
+      $('scanState').textContent = '연결 시도';
+      $('measureBtn').textContent = '신호 측정 중';
+      try {
+        // watchAdvertisements는 브라우저마다 지원이 다릅니다.
+        if (typeof device.watchAdvertisements === 'function') {
+          scanAbort = new AbortController();
+          await device.watchAdvertisements({ signal: scanAbort.signal });
+          $('scanState').textContent = '광고 신호 감시 중';
+          log('BLE 광고 수신 감시 시작');
+          toast('신호 수신을 기다리는 중');
+        } else if (typeof navigator.bluetooth.requestLEScan === 'function') {
+          scanObject = await navigator.bluetooth.requestLEScan({filters:[{namePrefix:'SeedFire-'}], keepRepeatedDevices:true});
+          navigator.bluetooth.addEventListener('advertisementreceived', onAdvertisement);
+          $('scanState').textContent = 'BLE 스캔 중';
+          log('BLE 스캔 시작');
+        } else throw new Error('이 Chrome에서는 RSSI 스캔 기능이 제공되지 않습니다.');
+      } catch (e) {
+        // watchAdvertisements 지원 표시는 있어도 실행이 거부될 수 있습니다.
+        scanMode = false;
+        if (scanAbort) { scanAbort.abort(); scanAbort = null; }
+        $('scanState').textContent = '이 브라우저에서 사용 불가';
+        $('measureBtn').textContent = '신호 측정 다시 시도';
+        $('guidanceText').textContent = '현재 Chrome에서 BLE 신호 세기 측정이 불가능합니다. 소리 울리기 버튼과 귀로 가까운 위치를 찾으세요.';
+        log('신호 측정: ' + (e.message || e));
+        toast('신호 측정 미지원 · 부저 기능은 사용 가능');
+      }
+      redraw();
+    }
+    async function sendBuzzer(value) {
+      if (!device || busy) return;
+      busy = true; redraw();
+      try {
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService(SERVICE_UUID);
-        characteristic = await service.getCharacteristic(BUZZER_UUID);
-        el('sensorHeading').textContent = device.name || '이름 없는 감지기';
-        log(`${device.name || '선택한 기기'} BLE 연결 성공`);
-        updateUI('연결 완료. 아래에서 부저 ON / OFF 명령을 보낼 수 있습니다.');
-      } catch (error) {
-        const msg = error && error.name === 'NotFoundError'
-          ? '기기를 선택하지 않았거나 검색되지 않았습니다. 전체 BLE 목록으로 다시 시도할 수 있어요.'
-          : `연결 실패: ${error.message || String(error)}`;
-        if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
-        characteristic = null;
-        log(msg);
-        updateUI(msg);
+        const characteristic = await service.getCharacteristic(BUZZER_UUID);
+        const bytes = new TextEncoder().encode(value);
+        if (typeof characteristic.writeValueWithResponse === 'function')
+          await characteristic.writeValueWithResponse(bytes);
+        else await characteristic.writeValue(bytes);
+        log('부저 ' + (value==='ON' ? '켜기' : '끄기') + ' 명령 전송됨');
+        toast(value==='ON' ? '소리 울리기 명령을 보냈어요' : '소리 끄기 명령을 보냈어요');
+      } catch(e) {
+        log('부저 전송 실패: ' + (e.message || e));
+        toast('명령 전송 실패 · 가까이에서 다시 시도해 주세요');
       } finally {
-        connecting = false;
-        updateUI();
+        // ESP32-C3 펌웨어는 연결 해제 후 BLE 광고를 다시 시작합니다.
+        try { if (device.gatt.connected) device.gatt.disconnect(); } catch(_) {}
+        busy = false; redraw();
       }
     }
-
-    function disconnect() {
-      if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
-      else onDisconnected();
-    }
-
-    async function sendCommand(command) {
-      if (!device || !device.gatt || !device.gatt.connected || !characteristic) {
-        log('전송 실패: 감지기를 먼저 연결하세요.');
-        return;
-      }
-      if (busy) return;
-      busy = true;
-      updateUI('명령 전송 중...');
-      try {
-        await characteristic.writeValueWithResponse(new TextEncoder().encode(command));
-        el('lastCommand').textContent = command === 'ON' ? '부저 켜기 요청' : '부저 끄기 요청';
-        log(`${command} 명령 BLE 쓰기 완료`);
-        updateUI(`${command} 전송 완료. 실제 출력은 감지기 시리얼 모니터 / 부저로 확인하세요.`);
-      } catch (error) {
-        log(`명령 전송 실패: ${error.message || String(error)}`);
-        updateUI('명령 전송에 실패했습니다. BLE 연결 상태를 확인해 주세요.');
-      } finally {
-        busy = false;
-        updateUI();
-      }
-    }
-
-    buttons.connect.addEventListener('click', () => connect(false));
-    buttons.scan.addEventListener('click', () => connect(true));
-    buttons.disconnect.addEventListener('click', disconnect);
-    buttons.on.addEventListener('click', () => sendCommand('ON'));
-    buttons.off.addEventListener('click', () => sendCommand('OFF'));
-    log('Seed_Fire 감지기 웹 제어 화면 준비 완료');
-    updateUI();
+    $('selectBtn').addEventListener('click', ()=>chooseDevice(false));
+    $('listAllBtn').addEventListener('click', ()=>chooseDevice(true));
+    $('measureBtn').addEventListener('click', ()=>{ enableCompass(); measureSignal(); });
+    $('beepBtn').addEventListener('click', ()=>sendBuzzer('ON'));
+    $('muteBtn').addEventListener('click', ()=>sendBuzzer('OFF'));
+    setInterval(() => {
+      // 이동 경향을 비교할 때는 너무 빠른 RSSI 요동 대신 느린 기준을 사용합니다.
+      if (smoothRSSI !== null) prevRSSI = prevRSSI===null ? smoothRSSI : prevRSSI*.85+smoothRSSI*.15;
+      redraw();
+    }, 1500);
+    $('headingState').textContent = '측정 시작 시 확인';
+    log('SeedFire Finder 준비 완료');
+    redraw();
   </script>
 </body>
 </html>
