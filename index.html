@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f9fafc">
-<meta name="description" content="Seed_Fire BLE 감지기 근접 탐색, 방향 탐색 힌트 및 부저 제어">
-<title>Seed_Fire · 실시간 탐색</title>
+<meta name="description" content="Seed_Fire BLE 감지기 RSSI 방향 탐색, 근접 파동, 원격 부저 제어">
+<title>Seed_Fire · 근접 탐색 V5</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#18233a;background:#f9fafc;--blue:#237aff;--line:#e8ecf3;--soft:#8a95a7}
 *{box-sizing:border-box}
@@ -67,6 +67,29 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
 .detail-toggle{font-size:11px;color:#909dad;border:0;background:transparent;text-decoration:underline;margin:11px auto;display:block;padding:8px}
 .log{white-space:pre-wrap;display:none;background:#f0f4f9;color:#63748b;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:150px;overflow:auto;font:11px/1.7 ui-monospace,SFMono-Regular,monospace}
 .log.open{display:block}
+
+/* V5: 근거리 탐색 모드. RSSI는 방위각이 아니라 신호 강도임. */
+.radar .ring{transition:opacity .65s,border-color .65s}
+.radar.near .ring{opacity:.35}
+.radar.near .glow{background:radial-gradient(circle at 50% 50%,rgba(33,114,248,.14),rgba(35,122,255,.03) 45%,transparent 75%)}
+.radar.near .needle-wrap{opacity:0}
+.near-beacon{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transform:scale(.84);transition:opacity .55s,transform .65s;display:grid;place-items:center}
+.radar.near .near-beacon{opacity:1;transform:scale(1)}
+.near-pulse{position:absolute;left:50%;top:50%;width:145px;height:145px;border:2px solid rgba(35,122,255,.7);border-radius:50%;opacity:0;transform:translate(-50%,-50%) scale(.50);box-shadow:0 0 25px rgba(42,122,255,.06);animation:near-ripple 2.7s ease-out infinite;animation-play-state:paused}
+.radar.near .near-pulse{animation-play-state:running}
+.near-pulse.p2{animation-delay:-.9s}
+.near-pulse.p3{animation-delay:-1.8s}
+.near-core{position:absolute;left:50%;top:50%;width:102px;height:102px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 32% 25%,#d4eaff 0%,#b6d6ff 43%,#8cbdff 78%,#72adff 100%);box-shadow:0 15px 48px rgba(35,122,255,.17),inset 0 0 0 1px rgba(255,255,255,.7)}
+.near-core:after{content:"";position:absolute;inset:15px;border:1px solid rgba(255,255,255,.7);border-radius:50%}
+.mini-needle{position:absolute;left:50%;top:50%;z-index:4;width:48px;height:62px;transform:translate(-50%,-50%) rotate(0deg) scale(.85);opacity:0;pointer-events:none;filter:drop-shadow(0 6px 9px rgba(13,85,190,.2));transition:opacity .45s;will-change:transform}
+.radar.near .mini-needle{opacity:1}
+.mini-needle svg{width:100%;height:100%;display:block}
+.near-tag{position:absolute;left:50%;top:calc(50% + 85px);transform:translateX(-50%);z-index:5;background:#e9f3ff;color:#236ddd;font-size:12px;font-weight:800;letter-spacing:-.3px;border-radius:999px;padding:7px 13px;white-space:nowrap;opacity:0;transition:opacity .3s}
+.radar.near .near-tag{opacity:1}
+.radar.near .radar-label{color:#4783d1}
+@keyframes near-ripple{0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}12%{opacity:.65}70%{opacity:.18}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}}
+@media (prefers-reduced-motion:reduce){.near-pulse{animation:none!important}.radar.near .near-pulse.p1{opacity:.3;transform:translate(-50%,-50%) scale(1.12)}}
+
 @keyframes ring-breathe{50%{transform:translate(-50%,-50%) scale(1.047);opacity:.48}}
 @media (max-width:375px){.app{padding-left:17px;padding-right:17px}.heading{margin-top:22px}.radar{max-width:302px;margin-top:8px}.radar-label{bottom:0}.card{margin-top:10px}}
 @media (prefers-reduced-motion:reduce){.ring.c{animation:none!important}.fill{transition:none}}
@@ -76,7 +99,7 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
 <main class="app">
   <header class="top">
     <div class="brand">SKY<b>EDGE</b><span class="slash">/</span>Seed_Fire</div>
-    <div class="version">FINDER 04.1</div>
+    <div class="version">FINDER 05.0</div>
   </header>
   <section class="heading">
     <div class="eyebrow">FIND MY SENSOR</div>
@@ -95,6 +118,19 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
         <path class="arrow-tail" d="M58 80 L68 76 L68 128 Q68 140 58 140Z" opacity=".52"/>
       </svg>
     </div>
+    <!-- RSSI가 -20 dBm 수준으로 강해지면 큰 화살표를 근접 파동으로 교체. -->
+    <div class="near-beacon" aria-hidden="true">
+      <div class="near-pulse p1"></div><div class="near-pulse p2"></div><div class="near-pulse p3"></div>
+      <div class="near-core"></div>
+    </div>
+    <!-- 기존 큰 화살표와 동일한 각도로 회전하는 전경의 작은 화살표. -->
+    <div class="mini-needle" id="mini-needle" aria-hidden="true">
+      <svg viewBox="0 0 116 150" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#1474f4" d="M58 7 C55 7 53 9 50 13 L16 76 C12 85 18 91 25 87 L48 76 L48 128 C48 135 52 140 58 140 C64 140 68 135 68 128 L68 76 L91 87 C98 91 104 85 100 76 L66 13 C63 9 61 7 58 7 Z"/>
+        <path fill="#7ebaff" d="M58 17 L29 76 L53 65 L58 24Z" opacity=".72"/>
+      </svg>
+    </div>
+    <div class="near-tag" aria-hidden="true">감지기 근처</div>
     <div class="radar-label" id="radar-caption">탐색 대기 중</div>
   </section>
   <section class="report" aria-live="polite">
@@ -114,11 +150,11 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
       <button class="btn dark" id="buzz-on" type="button" disabled><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4H4ZM17 9a4 4 0 0 1 0 6"/></svg>부저 켜기</button>
       <button class="btn border" id="buzz-off" type="button" disabled><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4H4ZM18 9l4 6m0-6-4 6"/></svg>부저 끄기</button>
     </div>
-    <p class="hint" id="hint">화살표는 신호 변화와 폰 회전으로 계산한 탐색 힌트입니다. 감지기를 정확히 가리키지 않으며, 움직여 확인해야 합니다.</p>
+    <p class="hint" id="hint">화살표는 RSSI와 폰 회전을 활용한 탐색 힌트입니다. 감지기를 정확히 가리키는 나침반이 아니며, 근접 파동도 실제 거리 측정은 아닙니다.</p>
   </section>
   <button class="detail-toggle" id="log-toggle">통신 기록 보기</button>
   <pre class="log" id="log"></pre>
-  <footer class="end">TX16S RSSI Finder처럼 신호 강도 변화를 비교하는 방식입니다.<br>정확한 방향이나 거리는 측정하지 않습니다.</footer>
+  <footer class="end">신호가 약 -20 dBm까지 강해지면 근접 파동으로 전환됩니다.<br>RSSI는 방향·정확한 거리가 아니며 최종 위치는 부저로 확인하세요.</footer>
 </main>
 <script>
 (() => {
@@ -130,13 +166,19 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
   const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
   const normalize = d => (d % 360 + 360) % 360;
   const shortest = d => ((d+540)%360)-180;
-  const demo = new URLSearchParams(location.search).get('demo') === '1';
+  const demoType = new URLSearchParams(location.search).get('demo');
+  const demo = demoType === '1' || demoType === 'near';
+  // 약 -20 dBm 진입 시 근접 모드, 경계에서 왕복 깜빡임 방지용 히스테리시스.
+  const NEAR_ENTER_DBM = -22;  // -20 dBm 근처 도달 (강해짐)
+  const NEAR_EXIT_DBM = -28;   // -28 dBm 이하로 약해지면 일반 모드
+  const NEAR_CONFIRM = 2;     // 연속 2회 측정 후 전환
 
   let device=null, buzzerChar=null, rssiChar=null, polling=null, connected=false, busy=false, reading=false;
   let filtered=null, recent=[], lastMeasurement=0, lastTrend='steady', lastReadWarning=0;
   let targetAngle=0, currentAngle=0, currentScale=.86, targetScale=.86, signalPower=.15;
   let scanActive=false, orientationAvailable=false, heading=null, headingSamples=[], directionEstimate=null, lastHeadingAt=0, orientationSource="none", directionStrength=0;
   let motionPreference=window.matchMedia?.('(prefers-reduced-motion:reduce)')?.matches ?? false;
+  let nearMode=false, nearStreak=0, farStreak=0;
 
   function log(s){$('log').textContent = `${new Date().toLocaleTimeString('ko-KR',{hour12:false})}  ${s}\n` + $('log').textContent.slice(0,3000);}
   function report(title,desc){$('report-title').textContent=title;$('report-desc').textContent=desc;}
@@ -156,6 +198,7 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
     $('rssi').textContent='—';$('fill').style.width='0%';$('strength').textContent='측정 대기 중';
     $('age').textContent='측정 대기';$('radar-caption').textContent='탐색 대기 중';
     signalPower=.15;targetScale=.86;$('radar').style.setProperty('--power','.15');
+    nearMode=false;nearStreak=0;farStreak=0;$('radar').classList.remove('near');
     scanActive=false;headingSamples=[];directionEstimate=null;directionStrength=0;
     $('scan').classList.remove('scanning');$('scan').textContent='방향 탐색 시작';
   }
@@ -185,6 +228,15 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
     $('age').textContent='방금 측정';
     $('radar').style.setProperty('--power',strength.toFixed(3));
     $('needle').classList.toggle('near',strength>.78);
+    // RSSI는 절댓값이 작을수록 가까울 가능성이 큼. 평균 측정값으로 전환.
+    if(!nearMode){
+      nearStreak = filtered >= NEAR_ENTER_DBM ? nearStreak+1 : 0;
+      if(nearStreak>=NEAR_CONFIRM){nearMode=true;farStreak=0;log('근접 파동 모드 시작: RSSI '+Math.round(filtered)+' dBm');}
+    } else {
+      farStreak = filtered <= NEAR_EXIT_DBM ? farStreak+1 : 0;
+      if(farStreak>=NEAR_CONFIRM){nearMode=false;nearStreak=0;log('일반 방향 탐색 모드 복귀');}
+    }
+    $('radar').classList.toggle('near',nearMode);
 
     if(scanActive){
       if(orientationAvailable && heading!==null && now-lastHeadingAt<4500){
@@ -211,6 +263,10 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
     }else{
       report(strengthLabel(filtered),'한 걸음씩 움직이며 신호의 변화를 확인하세요.');
       $('radar-caption').textContent='방향이 아닌 신호 세기 안내';
+    }
+    if(nearMode){
+      report('감지기 근처예요','신호가 매우 강합니다. 부저를 켜고 주변을 살펴보세요.');
+      $('radar-caption').textContent='근접 신호 · 회전 화살표는 탐색 참고용';
     }
   }
   function calculateBestAngle(){
@@ -387,6 +443,10 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
     }
     const breath=(recentSignal && !motionPreference) ? 1+Math.sin(t*3.2)*(.008+.016*signalPower):1;
     $('needle').style.transform=`translate(-50%, -50%) rotate(${currentAngle.toFixed(2)}deg) scale(${(currentScale*breath).toFixed(3)})`;
+    // 근접 모드의 작은 화살표도 큰 화살표와 동일한 실시간 회전값을 적용.
+    // 강한 신호일수록 작은 화살표가 조금 더 커짐.
+    const miniScale=(.76 + .38*signalPower) * (motionPreference?1:1+.025*Math.sin(t*3.6));
+    $('mini-needle').style.transform=`translate(-50%, -50%) rotate(${currentAngle.toFixed(2)}deg) scale(${miniScale.toFixed(3)})`;
     requestAnimationFrame(frame);
   }
   $('connect').addEventListener('click',connect);
@@ -402,6 +462,7 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
       $('strength').textContent='RSSI 갱신 중단';
       $('fill').style.width='0%';
       $('radar-caption').textContent='신호 없음 · 화살표 방향 판단 중지';
+      nearMode=false;nearStreak=0;farStreak=0;$('radar').classList.remove('near');
       report('신호 수신을 기다리고 있어요','연결 상태를 확인하거나 다시 연결해 보세요.');
     }
   },1000);
@@ -412,8 +473,9 @@ h1{font-size:29px;font-weight:760;letter-spacing:-1.2px;margin:10px 0 8px}
     $('connect').disabled=true;$('scan').disabled=true;
     $('connect').textContent='실제 연결은 일반 주소에서';
     let tick=0;
-    registerRSSI(-78);
-    setInterval(()=>{tick++;registerRSSI(-77+11*Math.sin(tick*.19)+3*Math.sin(tick*.6));},1300);
+    registerRSSI(demoType==='near'?-19:-78);
+    if(demoType==='near')registerRSSI(-19);
+    setInterval(()=>{tick++;registerRSSI(demoType==='near' ? -18+2*Math.sin(tick*.16) : -77+11*Math.sin(tick*.19)+3*Math.sin(tick*.6));},1300);
     $('radar-caption').textContent='시연 모드 · 실제 데이터 아님';
   }
   requestAnimationFrame(frame);
